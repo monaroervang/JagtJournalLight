@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="JagtJournal.Application/JagtJournal.Application.csproj" />
+  <Project Path="JagtJournal.Domain/JagtJournal.Domain.csproj" />
+  <Project Path="JagtJournal.Facade/JagtJournal.Facade.csproj" />
+  <Project Path="JagtJournal.Infrastructure/JagtJournal.Infrastructure.csproj" />
+  <Project Path="JagtJournal.Web/JagtJournal.Web.csproj" />
+</Solution>
