@@ -1,7 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\JagtJournal.Facade\JagtJournal.Facade.csproj" />
+    <ProjectReference Include="..\JagtJournal.Infrastructure\JagtJournal.Infrastructure.csproj" />
+    <ProjectReference Include="..\JagtJournal.Application\JagtJournal.Application.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -9,6 +11,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>27fe1933-e053-405d-9b0d-6100ebebb6cd</UserSecretsId>
   </PropertyGroup>
 
 </Project>

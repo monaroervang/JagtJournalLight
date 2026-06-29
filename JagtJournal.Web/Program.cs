@@ -1,3 +1,9 @@
+using JagtJournal.Application.Interfaces;
+using JagtJournal.Application.Services;
+using JagtJournal.Facade.HuntEntries;
+using JagtJournal.Infrastructure.Data;
+using JagtJournal.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 using JagtJournal.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +11,26 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+var connectionString = builder.Configuration.GetConnectionString("JagtJournalDb");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string 'JagtJournalDb' mangler.");
+}
+
+// Registrerer EF Core DbContext med SQL Server
+builder.Services.AddDbContext<JagtJournalDbContext>(options =>
+    options.UseSqlServer(connectionString));
+
+// Registrerer repository-implementationen fra Infrastructure
+builder.Services.AddScoped<IHuntEntryRepository, EfHuntEntryRepository>();
+
+// Registrerer Application Service
+builder.Services.AddScoped<IHuntEntryService, HuntEntryService>();
+
+// Registrerer Facade-laget, som Blazor senere skal bruge
+builder.Services.AddScoped<IHuntEntryFacade, HuntEntryFacade>();
 
 var app = builder.Build();
 
