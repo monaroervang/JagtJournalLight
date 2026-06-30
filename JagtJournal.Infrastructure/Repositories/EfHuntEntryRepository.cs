@@ -7,25 +7,29 @@ namespace JagtJournal.Infrastructure.Repositories;
 
 public class EfHuntEntryRepository : IHuntEntryRepository
 {
-    private readonly JagtJournalDbContext _context;
+    private readonly IDbContextFactory<JagtJournalDbContext> _contextFactory;
 
-    // Repository får DbContext gennem dependency injection
-    public EfHuntEntryRepository(JagtJournalDbContext context)
+    // Repository får en DbContextFactory, så hver operation kan få sin egen DbContext
+    public EfHuntEntryRepository(IDbContextFactory<JagtJournalDbContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     // Gemmer en ny jagtjournal-post i databasen
     public async Task AddAsync(HuntEntry huntEntry, CancellationToken cancellationToken = default)
     {
-        await _context.HuntEntries.AddAsync(huntEntry, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        await context.HuntEntries.AddAsync(huntEntry, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
     }
 
     // Henter én jagtjournal-post med tilhørende resultater, jagtkammerater og vejrdata
     public async Task<HuntEntry?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.HuntEntries
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context.HuntEntries
             .Include(huntEntry => huntEntry.Results)
             .Include(huntEntry => huntEntry.Companions)
             .Include(huntEntry => huntEntry.WeatherSnapshot)
@@ -37,7 +41,9 @@ public class EfHuntEntryRepository : IHuntEntryRepository
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return await _context.HuntEntries
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context.HuntEntries
             .AsNoTracking()
             .Where(huntEntry => huntEntry.UserId == userId)
             .OrderByDescending(huntEntry => huntEntry.Date)

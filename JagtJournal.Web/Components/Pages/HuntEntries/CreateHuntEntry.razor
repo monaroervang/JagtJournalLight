@@ -1,0 +1,80 @@
+@page "/huntentries/create"
+@rendermode InteractiveServer
+
+@using JagtJournal.Application.Dtos.HuntEntries
+@using JagtJournal.Facade.HuntEntries
+
+@inject IHuntEntryFacade HuntEntryFacade
+
+<section aria-labelledby="create-hunt-entry-heading">
+    <h3 id="create-hunt-entry-heading">Opret jagtpost</h3>
+
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <output role="status">@_message</output>
+    }
+
+    <form @onsubmit="CreateAsync" @onsubmit:preventDefault="true">
+        <fieldset>
+            <legend>Jagtpost oplysninger</legend>
+
+            <p>
+                <label for="userId">UserId</label>
+                <input id="userId" @bind="_userIdText" />
+            </p>
+
+            <p>
+                <label for="huntingAreaId">HuntingAreaId</label>
+                <input id="huntingAreaId" @bind="_huntingAreaIdText" />
+            </p>
+
+            <p>
+                <label for="date">Dato</label>
+                <input id="date" type="date" @bind="_date" />
+            </p>
+
+            <p>
+                <label for="cartridgesUsed">Patroner brugt</label>
+                <input id="cartridgesUsed" type="number" min="0" @bind="_cartridgesUsed" />
+            </p>
+
+            <button type="submit">Opret jagtpost</button>
+        </fieldset>
+    </form>
+</section>
+
+@code {
+    private string _userIdText = Guid.NewGuid().ToString();
+    private string _huntingAreaIdText = Guid.NewGuid().ToString();
+    private DateTime _date = DateTime.Today;
+    private int _cartridgesUsed;
+    private string? _message;
+
+    // Kaldes når formularen submitter
+    private async Task CreateAsync()
+    {
+        if (!Guid.TryParse(_userIdText, out var userId))
+        {
+            _message = "UserId er ikke en gyldig Guid.";
+            return;
+        }
+
+        if (!Guid.TryParse(_huntingAreaIdText, out var huntingAreaId))
+        {
+            _message = "HuntingAreaId er ikke en gyldig Guid.";
+            return;
+        }
+
+        var dto = new CreateHuntEntryDto
+        {
+            UserId = userId,
+            HuntingAreaId = huntingAreaId,
+            Date = DateOnly.FromDateTime(_date),
+            CartridgesUsed = _cartridgesUsed
+        };
+
+        var huntEntryId = await HuntEntryFacade.CreateAsync(dto);
+
+        _message = $"Jagtpost oprettet med id: {huntEntryId}";
+    }
+}

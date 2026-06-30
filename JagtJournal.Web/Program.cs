@@ -20,7 +20,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 
 // Registrerer EF Core DbContext med SQL Server
-builder.Services.AddDbContext<JagtJournalDbContext>(options =>
+builder.Services.AddDbContextFactory<JagtJournalDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 // Registrerer repository-implementationen fra Infrastructure
