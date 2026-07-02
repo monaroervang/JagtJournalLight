@@ -1,0 +1,78 @@
+@page "/huntentries"
+@rendermode InteractiveServer
+
+@using JagtJournal.Application.Dtos.HuntEntries
+@using JagtJournal.Facade.HuntEntries
+
+@inject IHuntEntryFacade HuntEntryFacade
+
+<section aria-labelledby="hunt-entry-list-heading">
+    <h3 id="hunt-entry-list-heading">Jagtposter</h3>
+
+    <form @onsubmit="LoadHuntEntriesAsync" @onsubmit:preventDefault="true">
+        <fieldset>
+            <legend>Find jagtposter for bruger</legend>
+
+            <p>
+                <label for="userId">UserId</label>
+                <input id="userId" @bind="_userIdText" />
+            </p>
+
+            <button type="submit">Hent jagtposter</button>
+        </fieldset>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(_message))
+    {
+        <output role="status">@_message</output>
+    }
+
+    @if (_huntEntries.Count > 0)
+    {
+        <table>
+            <caption>Liste over jagtposter</caption>
+
+            <thead>
+                <tr>
+                    <th scope="col">Dato</th>
+                    <th scope="col">Patroner brugt</th>
+                    <th scope="col">Id</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var huntEntry in _huntEntries)
+                {
+                    <tr>
+                        <td>@huntEntry.Date</td>
+                        <td>@huntEntry.CartridgesUsed</td>
+                        <td>@huntEntry.Id</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private string _userIdText = string.Empty;
+    private string? _message;
+    private IReadOnlyList<HuntEntryListItemDto> _huntEntries = [];
+
+    // Henter jagtposter for den bruger, der er skrevet i feltet
+    private async Task LoadHuntEntriesAsync()
+    {
+        if (!Guid.TryParse(_userIdText, out var userId))
+        {
+            _message = "UserId er ikke en gyldig Guid.";
+            _huntEntries = [];
+            return;
+        }
+
+        _huntEntries = await HuntEntryFacade.GetByUserIdAsync(userId);
+
+        _message = _huntEntries.Count == 0
+            ? "Der blev ikke fundet nogen jagtposter for denne bruger."
+            : $"Der blev fundet {_huntEntries.Count} jagtpost(er).";
+    }
+}
