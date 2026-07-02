@@ -25,6 +25,7 @@ builder.Services.AddDbContextFactory<JagtJournalDbContext>(options =>
 
 // Registrerer repository-implementationen fra Infrastructure
 builder.Services.AddScoped<IHuntEntryRepository, EfHuntEntryRepository>();
+builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 
 // Registrerer Application Service
 builder.Services.AddScoped<IHuntEntryService, HuntEntryService>();
