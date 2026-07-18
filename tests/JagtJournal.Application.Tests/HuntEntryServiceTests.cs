@@ -11,13 +11,22 @@ public class HuntEntryServiceTests
     [Fact]
     public async Task CreateAsync_ShouldCreateHuntEntryAndCallRepository_WhenDtoIsValid()
     {
-        // Arrange: Vi mocker repository, fordi vi kun vil teste Application Service
-        var repositoryMock = new Mock<IHuntEntryRepository>();
+        // Arrange: Vi mocker repositories,
+        // fordi vi kun vil teste Application Service
+        var huntEntryRepositoryMock = new Mock<IHuntEntryRepository>();
+        var userRepositoryMock = new Mock<IUserRepository>();
+
+        var user = new User("Testbruger");
+
+        userRepositoryMock
+            .Setup(repository => repository.GetByUsernameAsync(
+                "Testbruger",
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         HuntEntry? capturedHuntEntry = null;
 
-        // Vi gemmer den HuntEntry, som servicen sender videre til repository
-        repositoryMock
+        huntEntryRepositoryMock
             .Setup(repository => repository.AddAsync(
                 It.IsAny<HuntEntry>(),
                 It.IsAny<CancellationToken>()))
@@ -27,29 +36,30 @@ public class HuntEntryServiceTests
             })
             .Returns(Task.CompletedTask);
 
-        var service = new HuntEntryService(repositoryMock.Object);
+        var service = new HuntEntryService(
+            huntEntryRepositoryMock.Object,
+            userRepositoryMock.Object);
 
         var dto = new CreateHuntEntryDto
         {
-            UserId = Guid.NewGuid(),
+            Username = "Testbruger",
             HuntingAreaId = Guid.NewGuid(),
             Date = new DateOnly(2026, 1, 20),
             CartridgesUsed = 4
         };
 
-        // Act: Vi kalder servicen
+        // Act
         var result = await service.CreateAsync(dto);
 
-        // Assert: Repository skal kaldes præcis én gang
-        repositoryMock.Verify(repository => repository.AddAsync(
+        // Assert
+        huntEntryRepositoryMock.Verify(repository => repository.AddAsync(
             It.IsAny<HuntEntry>(),
             It.IsAny<CancellationToken>()),
             Times.Once);
 
-        // Assert: DTO'en skal være omsat korrekt til en domain entity
         Assert.NotNull(capturedHuntEntry);
         Assert.Equal(capturedHuntEntry.Id, result);
-        Assert.Equal(dto.UserId, capturedHuntEntry.UserId);
+        Assert.Equal(user.Id, capturedHuntEntry.UserId);
         Assert.Equal(dto.HuntingAreaId, capturedHuntEntry.HuntingAreaId);
         Assert.Equal(dto.Date, capturedHuntEntry.Date);
         Assert.Equal(dto.CartridgesUsed, capturedHuntEntry.CartridgesUsed);
@@ -66,6 +76,7 @@ public class HuntEntryServiceTests
             3);
 
         var repositoryMock = new Mock<IHuntEntryRepository>();
+        var userRepositoryMock = new Mock<IUserRepository>();
 
         repositoryMock
             .Setup(repository => repository.GetByIdAsync(
@@ -73,7 +84,9 @@ public class HuntEntryServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(huntEntry);
 
-        var service = new HuntEntryService(repositoryMock.Object);
+        var service = new HuntEntryService(
+            repositoryMock.Object,
+            userRepositoryMock.Object);
 
         // Act: Vi henter detaljer via servicen
         var result = await service.GetDetailsAsync(huntEntry.Id);
@@ -92,6 +105,7 @@ public class HuntEntryServiceTests
     {
         // Arrange: Repository returnerer null, fordi jagtposten ikke findes
         var repositoryMock = new Mock<IHuntEntryRepository>();
+        var userRepositoryMock = new Mock<IUserRepository>();
 
         repositoryMock
             .Setup(repository => repository.GetByIdAsync(
@@ -99,7 +113,9 @@ public class HuntEntryServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((HuntEntry?)null);
 
-        var service = new HuntEntryService(repositoryMock.Object);
+        var service = new HuntEntryService(
+        repositoryMock.Object,
+        userRepositoryMock.Object);
 
         // Act: Vi forsøger at hente en jagtpost, der ikke findes
         var result = await service.GetDetailsAsync(Guid.NewGuid());
@@ -108,31 +124,50 @@ public class HuntEntryServiceTests
         Assert.Null(result);
     }
     [Fact]
-    public async Task GetByUserIdAsync_ShouldReturnListDtos_WhenUserHasHuntEntries()
+    public async Task GetLatestByUsernameAsync_ShouldReturnListDtos_WhenUserHasHuntEntries()
     {
-        // Arrange: Repository returnerer to jagtposter for samme bruger
-        var userId = Guid.NewGuid();
+        // Arrange
+        var username = "Testbruger";
+        var user = new User(username);
 
         IReadOnlyList<HuntEntry> huntEntries = new List<HuntEntry>
     {
-        new HuntEntry(userId, Guid.NewGuid(), new DateOnly(2026, 1, 20), 3),
-        new HuntEntry(userId, Guid.NewGuid(), new DateOnly(2026, 1, 21), 5)
+        new HuntEntry(
+            user.Id,
+            Guid.NewGuid(),
+            new DateOnly(2026, 1, 20),
+            3),
+
+        new HuntEntry(
+            user.Id,
+            Guid.NewGuid(),
+            new DateOnly(2026, 1, 21),
+            5)
     };
 
         var repositoryMock = new Mock<IHuntEntryRepository>();
+        var userRepositoryMock = new Mock<IUserRepository>();
+
+        userRepositoryMock
+            .Setup(repository => repository.GetByUsernameAsync(
+                username,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         repositoryMock
             .Setup(repository => repository.GetByUserIdAsync(
-                userId,
+                user.Id,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(huntEntries);
 
-        var service = new HuntEntryService(repositoryMock.Object);
+        var service = new HuntEntryService(
+            repositoryMock.Object,
+            userRepositoryMock.Object);
 
-        // Act: Vi henter brugerens jagtposter gennem servicen
-        var result = await service.GetByUserIdAsync(userId);
+        // Act
+        var result = await service.GetLatestByUsernameAsync(username);
 
-        // Assert: Resultatet skal være mappet til liste-DTO'er
+        // Assert
         Assert.Equal(2, result.Count);
 
         Assert.Equal(huntEntries[0].Id, result[0].Id);

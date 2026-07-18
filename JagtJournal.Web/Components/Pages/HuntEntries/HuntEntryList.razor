@@ -14,8 +14,8 @@
             <legend>Find jagtposter for bruger</legend>
 
             <p>
-                <label for="userId">UserId</label>
-                <input id="userId" @bind="_userIdText" />
+                <label for="username">Brugernavn</label>
+                <input id="username" @bind="_username" />
             </p>
 
             <button type="submit">Hent jagtposter</button>
@@ -55,21 +55,20 @@
 </section>
 
 @code {
-    private string _userIdText = string.Empty;
+    private string _username = string.Empty;
     private string? _message;
     private IReadOnlyList<HuntEntryListItemDto> _huntEntries = [];
 
     // Henter jagtposter for den bruger, der er skrevet i feltet
     private async Task LoadHuntEntriesAsync()
     {
-        if (!Guid.TryParse(_userIdText, out var userId))
+        if (string.IsNullOrWhiteSpace(_username))
         {
-            _message = "UserId er ikke en gyldig Guid.";
-            _huntEntries = [];
+            _message = "Brugernavn skal udfyldes.";
             return;
         }
 
-        _huntEntries = await HuntEntryFacade.GetByUserIdAsync(userId);
+        _huntEntries = await HuntEntryFacade.GetLatestByUsernameAsync(_username.Trim());
 
         _message = _huntEntries.Count == 0
             ? "Der blev ikke fundet nogen jagtposter for denne bruger."

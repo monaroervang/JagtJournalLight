@@ -2,7 +2,7 @@ namespace JagtJournal.Application.Dtos.HuntEntries;
 
 public class CreateHuntEntryDto
 {
-    public Guid UserId { get; set; }
+    public string Username { get; set; } = string.Empty;
     public Guid HuntingAreaId { get; set; }
     public DateOnly Date { get; set; }
     public int CartridgesUsed { get; set; }

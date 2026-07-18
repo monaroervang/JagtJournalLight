@@ -7,33 +7,33 @@ public class HuntEntryFacade : IHuntEntryFacade
 {
     private readonly IHuntEntryService _huntEntryService;
 
-    // Facaden får Application Service gennem dependency injection
     public HuntEntryFacade(IHuntEntryService huntEntryService)
     {
         _huntEntryService = huntEntryService;
     }
 
-    // Sender oprettelse videre til Application-laget
-    public async Task<Guid> CreateAsync(
+    public Task<Guid> CreateAsync(
         CreateHuntEntryDto dto,
         CancellationToken cancellationToken = default)
     {
-        return await _huntEntryService.CreateAsync(dto, cancellationToken);
+        return _huntEntryService.CreateAsync(dto, cancellationToken);
     }
 
-    // Sender detaljeforespørgsel videre til Application-laget
-    public async Task<HuntEntryDetailsDto?> GetDetailsAsync(
+    public Task<HuntEntryDetailsDto?> GetDetailsAsync(
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        return await _huntEntryService.GetDetailsAsync(id, cancellationToken);
+        return _huntEntryService.GetDetailsAsync(id, cancellationToken);
     }
 
-    // Sender listeforespørgsel videre til Application-laget
-    public async Task<IReadOnlyList<HuntEntryListItemDto>> GetByUserIdAsync(
-        Guid userId,
+    public Task<IReadOnlyList<HuntEntryListItemDto>> GetLatestByUsernameAsync(
+        string username,
+        int maxCount = 10,
         CancellationToken cancellationToken = default)
     {
-        return await _huntEntryService.GetByUserIdAsync(userId, cancellationToken);
+        return _huntEntryService.GetLatestByUsernameAsync(
+            username,
+            maxCount,
+            cancellationToken);
     }
 }

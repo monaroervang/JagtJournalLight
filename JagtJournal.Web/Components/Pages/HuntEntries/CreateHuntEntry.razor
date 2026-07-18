@@ -19,8 +19,8 @@
             <legend>Jagtpost oplysninger</legend>
 
             <p>
-                <label for="userId">UserId</label>
-                <input id="userId" @bind="_userIdText" />
+                <label for="username">Brugernavn</label>
+                <input id="username" @bind="_username" />
             </p>
 
             <p>
@@ -44,7 +44,7 @@
 </section>
 
 @code {
-    private string _userIdText = Guid.NewGuid().ToString();
+    private string _username = string.Empty;
     private string _huntingAreaIdText = Guid.NewGuid().ToString();
     private DateTime _date = DateTime.Today;
     private int _cartridgesUsed;
@@ -53,21 +53,21 @@
     // Kaldes når formularen submitter
     private async Task CreateAsync()
     {
-        if (!Guid.TryParse(_userIdText, out var userId))
+        if (string.IsNullOrWhiteSpace(_username))
         {
-            _message = "UserId er ikke en gyldig Guid.";
+            _message = "Brugernavn skal udfyldes.";
             return;
         }
 
         if (!Guid.TryParse(_huntingAreaIdText, out var huntingAreaId))
         {
-            _message = "HuntingAreaId er ikke en gyldig Guid.";
+            _message = "Vælg eller indtast et gyldigt jagtområde.";
             return;
         }
 
         var dto = new CreateHuntEntryDto
         {
-            UserId = userId,
+            Username = _username,
             HuntingAreaId = huntingAreaId,
             Date = DateOnly.FromDateTime(_date),
             CartridgesUsed = _cartridgesUsed

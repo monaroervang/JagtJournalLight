@@ -10,6 +10,9 @@ public interface IHuntEntryService
     // Henter detaljer for én jagtjournal-post
     Task<HuntEntryDetailsDto?> GetDetailsAsync(Guid id, CancellationToken cancellationToken = default);
 
-    // Henter en simpel liste over en brugers jagtjournal-poster
-    Task<IReadOnlyList<HuntEntryListItemDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    // Henter de seneste jagtjournal-poster for et brugernavn
+    Task<IReadOnlyList<HuntEntryListItemDto>> GetLatestByUsernameAsync(
+        string username,
+        int maxCount = 10,
+        CancellationToken cancellationToken = default);
 }
