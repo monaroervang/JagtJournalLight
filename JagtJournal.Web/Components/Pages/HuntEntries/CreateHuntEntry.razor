@@ -3,6 +3,7 @@
 
 @using JagtJournal.Application.Dtos.HuntEntries
 @using JagtJournal.Facade.HuntEntries
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject IHuntEntryFacade HuntEntryFacade
 
@@ -14,67 +15,93 @@
         <output role="status">@_message</output>
     }
 
-    <form @onsubmit="CreateAsync" @onsubmit:preventDefault="true">
-        <fieldset>
-            <legend>Jagtpost oplysninger</legend>
+   <EditForm Model="_model" OnValidSubmit="CreateAsync">
+    <!--
+        EditForm er Blazors formular-komponent.
+        Den arbejder sammen med Data Annotations og validerer modellen,
+        før OnValidSubmit kalder CreateAsync.
+    -->
 
-            <p>
-                <label for="username">Brugernavn</label>
-                <input id="username" @bind="_username" />
-            </p>
+    <!-- Aktiverer validering ud fra Data Annotations på DTO'en -->
+    <DataAnnotationsValidator />
 
-            <p>
-                <label for="huntingAreaId">HuntingAreaId</label>
-                <input id="huntingAreaId" @bind="_huntingAreaIdText" />
-            </p>
+    <!-- Viser en samlet liste over eventuelle valideringsfejl -->
+    <ValidationSummary />
 
-            <p>
-                <label for="date">Dato</label>
-                <input id="date" type="date" @bind="_date" />
-            </p>
+    <fieldset>
+        <legend>Jagtpost oplysninger</legend>
 
-            <p>
-                <label for="cartridgesUsed">Patroner brugt</label>
-                <input id="cartridgesUsed" type="number" min="0" @bind="_cartridgesUsed" />
-            </p>
+        <p>
+            <label for="username">Brugernavn</label>
 
-            <button type="submit">Opret jagtpost</button>
-        </fieldset>
-    </form>
+            <!-- Binder tekstfeltet til Username på formularens model -->
+            <InputText id="username" @bind-Value="_model.Username" />
+
+            <!-- Viser kun valideringsfejl for Username -->
+            <ValidationMessage For="@(() => _model.Username)" />
+        </p>
+
+        <p>
+            <label for="huntingAreaId">HuntingAreaId</label>
+
+            <!--
+                Jagtområdets id indtastes midlertidigt som tekst.
+                Teksten konverteres til Guid i CreateAsync.
+            -->
+            <input id="huntingAreaId" @bind="_huntingAreaIdText" />
+        </p>
+
+        <p>
+            <label for="date">Dato</label>
+            <InputDate id="date" @bind-Value="_model.Date" />
+            <ValidationMessage For="@(() => _model.Date)" />
+        </p>
+
+        <p>
+            <label for="cartridgesUsed">Patroner brugt</label>
+            <InputNumber id="cartridgesUsed"
+                         @bind-Value="_model.CartridgesUsed" />
+            <ValidationMessage For="@(() => _model.CartridgesUsed)" />
+        </p>
+
+        <button type="submit">Opret jagtpost</button>
+    </fieldset>
+</EditForm>
 </section>
 
 @code {
-    private string _username = string.Empty;
+    // Formularens model. Data Annotations på DTO'en bruges
+    // automatisk af Blazor til at validere brugerens input.
+    private CreateHuntEntryDto _model = new()
+    {
+        Date = DateOnly.FromDateTime(DateTime.Today)
+    };
+
+    // Guid indtastes som tekst og konverteres til Guid,
+    // før jagtposten oprettes.
     private string _huntingAreaIdText = Guid.NewGuid().ToString();
-    private DateTime _date = DateTime.Today;
-    private int _cartridgesUsed;
+
+    // Bruges til at vise fejl- eller succesbeskeder i UI'et.
     private string? _message;
 
-    // Kaldes når formularen submitter
+    // Kaldes automatisk, når formularen er gyldig
+    // og brugeren trykker på "Opret jagtpost".
     private async Task CreateAsync()
     {
-        if (string.IsNullOrWhiteSpace(_username))
-        {
-            _message = "Brugernavn skal udfyldes.";
-            return;
-        }
-
+        // Kontrollerer om det indtastede jagtområde er et gyldigt Guid.
         if (!Guid.TryParse(_huntingAreaIdText, out var huntingAreaId))
         {
             _message = "Vælg eller indtast et gyldigt jagtområde.";
             return;
         }
 
-        var dto = new CreateHuntEntryDto
-        {
-            Username = _username,
-            HuntingAreaId = huntingAreaId,
-            Date = DateOnly.FromDateTime(_date),
-            CartridgesUsed = _cartridgesUsed
-        };
+        // Gemmer Guid'en i DTO'en, inden den sendes til facaden.
+        _model.HuntingAreaId = huntingAreaId;
 
-        var huntEntryId = await HuntEntryFacade.CreateAsync(dto);
+        // Sender den validerede DTO videre til Application-laget.
+        var huntEntryId = await HuntEntryFacade.CreateAsync(_model);
 
+        // Viser en bekræftelse til brugeren.
         _message = $"Jagtpost oprettet med id: {huntEntryId}";
     }
 }
