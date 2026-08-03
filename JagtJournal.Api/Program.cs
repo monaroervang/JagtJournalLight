@@ -1,4 +1,22 @@
+using JagtJournal.Application.DependencyInjection;
+using JagtJournal.Facade.DependencyInjection;
+using JagtJournal.Infrastructure.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString =
+    builder.Configuration.GetConnectionString("JagtJournalDb");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Connection string 'JagtJournalDb' mangler.");
+}
+
+// Registrerer services fra de enkelte lag.
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(connectionString);
+builder.Services.AddFacade();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
