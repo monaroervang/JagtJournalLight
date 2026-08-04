@@ -2,6 +2,7 @@ using JagtJournal.Application.DependencyInjection;
 using JagtJournal.Facade.DependencyInjection;
 using JagtJournal.Infrastructure.DependencyInjection;
 using JagtJournal.Web.Components;
+using JagtJournal.Web.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,14 @@ if (string.IsNullOrWhiteSpace(connectionString))
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.AddFacade();
+
+// Registrerer en typed HttpClient til kommunikation med JagtJournal.Api.
+// BaseAddress er API'ets grundadresse, som de relative endpoint-adresser
+// i HuntingAreaApiClient bliver sat sammen med.
+builder.Services.AddHttpClient<HuntingAreaApiClient>(httpClient =>
+{
+    httpClient.BaseAddress = new Uri("https://localhost:7117");
+});
 
 var app = builder.Build();
 
