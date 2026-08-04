@@ -1,4 +1,5 @@
 ﻿using JagtJournal.Facade.HuntEntries;
+using JagtJournal.Facade.HuntingAreas;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JagtJournal.Facade.DependencyInjection;
@@ -18,6 +19,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services)
     {
         services.AddScoped<IHuntEntryFacade, HuntEntryFacade>();
+        services.AddScoped<IHuntingAreaFacade, HuntingAreaFacade>();
 
         return services;
     }

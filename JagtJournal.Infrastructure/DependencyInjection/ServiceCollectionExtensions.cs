@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IHuntEntryRepository, EfHuntEntryRepository>();
         services.AddScoped<IUserRepository, EfUserRepository>();
+        services.AddScoped<IHuntingAreaRepository, EfHuntingAreaRepository>();
 
         return services;
     }

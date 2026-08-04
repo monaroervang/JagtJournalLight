@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services)
     {
         services.AddScoped<IHuntEntryService, HuntEntryService>();
+        services.AddScoped<IHuntingAreaService, HuntingAreaService>();
 
         return services;
     }
